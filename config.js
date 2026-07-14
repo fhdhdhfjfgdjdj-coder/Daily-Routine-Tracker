@@ -15,5 +15,5 @@
 
 const CONFIG = {
   // แทนที่ด้วย Web App URL ของ Google Apps Script ที่ Deploy แล้ว
-  API_URL: "https://script.google.com/macros/s/AKfycby_REPLACE_WITH_YOUR_DEPLOYMENT_ID/exec",
+  API_URL: "https://script.google.com/macros/s/AKfycbw9pOux-Evvi5kRSR2AvlW5yHTZDMhnzykWRz_tHM9o6XNLe2BqGD1HjxTDzpsZ5A4X/exec",
 };

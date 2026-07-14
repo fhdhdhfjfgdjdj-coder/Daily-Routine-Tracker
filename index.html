@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Routine Tracker</title>
+  <meta name="description" content="เว็บแอปบันทึกและติดตามกิจวัตรประจำวัน เชื่อมต่อ Google Sheets ผ่าน Google Apps Script" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <!-- ริมกระดาษด้านซ้าย (เส้นสมุดโน้ต) -->
+    <div class="margin-rule" aria-hidden="true"></div>
+
+    <header class="page-header">
+      <div class="header-eyebrow">สมุดบันทึกกิจวัตรประจำวัน</div>
+      <h1 class="header-title">Daily Routine Tracker</h1>
+      <p class="header-today" id="todayLabel">—</p>
+    </header>
+
+    <main class="page-body">
+      <!-- สรุปสถานะวันนี้ -->
+      <section class="stats-row" aria-label="สรุปภาพรวม">
+        <div class="stat-card">
+          <span class="stat-number" id="statTotal">0</span>
+          <span class="stat-label">รายการทั้งหมด</span>
+        </div>
+        <div class="stat-card stat-done">
+          <span class="stat-number" id="statDone">0</span>
+          <span class="stat-label">ทำแล้ว</span>
+        </div>
+        <div class="stat-card stat-pending">
+          <span class="stat-number" id="statPending">0</span>
+          <span class="stat-label">ยังไม่ทำ</span>
+        </div>
+      </section>
+
+      <!-- ฟอร์มเพิ่ม/แก้ไขกิจวัตร -->
+      <section class="form-card" aria-label="ฟอร์มบันทึกกิจวัตร">
+        <div class="form-card-head">
+          <h2 id="formTitle">เพิ่มกิจวัตรใหม่</h2>
+          <span class="form-card-tag" id="formModeTag">NEW</span>
+        </div>
+
+        <form id="routineForm" novalidate>
+          <input type="hidden" id="routineId" value="" />
+
+          <div class="form-grid">
+            <div class="field">
+              <label for="fieldDate">วันที่</label>
+              <input type="date" id="fieldDate" required />
+            </div>
+
+            <div class="field">
+              <label for="fieldTime">เวลา</label>
+              <input type="time" id="fieldTime" required />
+            </div>
+
+            <div class="field field-wide">
+              <label for="fieldActivity">ชื่อกิจกรรม</label>
+              <input
+                type="text"
+                id="fieldActivity"
+                placeholder="เช่น ออกกำลังกาย, อ่านหนังสือ, ประชุมทีม"
+                required
+                maxlength="120"
+              />
+            </div>
+
+            <div class="field">
+              <label for="fieldStatus">สถานะ</label>
+              <select id="fieldStatus">
+                <option value="ยังไม่ทำ">ยังไม่ทำ</option>
+                <option value="ทำแล้ว">ทำแล้ว</option>
+              </select>
+            </div>
+
+            <div class="field field-wide">
+              <label for="fieldNote">หมายเหตุ</label>
+              <textarea
+                id="fieldNote"
+                rows="2"
+                placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+                maxlength="300"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="button" id="cancelEditBtn" class="btn btn-ghost" hidden>
+              ยกเลิกการแก้ไข
+            </button>
+            <button type="submit" id="submitBtn" class="btn btn-primary">
+              บันทึกกิจวัตร
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- ตารางรายการกิจวัตร -->
+      <section class="list-card" aria-label="รายการกิจวัตรทั้งหมด">
+        <div class="list-card-head">
+          <h2>รายการกิจวัตร</h2>
+          <div class="list-controls">
+            <input
+              type="date"
+              id="filterDate"
+              aria-label="กรองตามวันที่"
+              title="กรองตามวันที่"
+            />
+            <button id="clearFilterBtn" class="btn btn-ghost btn-small">
+              ล้างตัวกรอง
+            </button>
+            <button id="refreshBtn" class="btn btn-outline btn-small">
+              โหลดใหม่
+            </button>
+          </div>
+        </div>
+
+        <div id="statusBanner" class="status-banner" hidden></div>
+
+        <div class="table-wrap">
+          <table class="routine-table">
+            <thead>
+              <tr>
+                <th>วันที่</th>
+                <th>เวลา</th>
+                <th>กิจกรรม</th>
+                <th>สถานะ</th>
+                <th>หมายเหตุ</th>
+                <th class="col-actions">จัดการ</th>
+              </tr>
+            </thead>
+            <tbody id="routineTableBody">
+              <!-- แถวข้อมูลจะถูกสร้างด้วย JavaScript -->
+            </tbody>
+          </table>
+        </div>
+
+        <p id="emptyState" class="empty-state" hidden>
+          ยังไม่มีกิจวัตรที่บันทึกไว้ — เริ่มเพิ่มรายการแรกของคุณด้านบนได้เลย
+        </p>
+      </section>
+    </main>
+
+    <footer class="page-footer">
+      <span>ข้อมูลซิงค์กับ Google Sheets · แจ้งเตือนผ่าน Discord</span>
+    </footer>
+  </div>
+
+  <!-- Template แถวตาราง (ใช้ cloneNode ใน app.js) -->
+  <template id="rowTemplate">
+    <tr>
+      <td data-cell="date"></td>
+      <td data-cell="time"></td>
+      <td data-cell="activity"></td>
+      <td data-cell="status"></td>
+      <td data-cell="note"></td>
+      <td class="col-actions">
+        <button class="icon-btn edit-btn" type="button" title="แก้ไข">แก้ไข</button>
+        <button class="icon-btn delete-btn" type="button" title="ลบ">ลบ</button>
+      </td>
+    </tr>
+  </template>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

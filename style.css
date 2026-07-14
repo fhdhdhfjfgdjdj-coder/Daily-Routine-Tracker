@@ -1,0 +1,561 @@
+/* -------------------------------------------------------------------
+   Daily Routine Tracker — style.css
+   แนวคิดดีไซน์: หน้ากระดาษสมุดบันทึกกิจวัตร (ledger / day-planner)
+   ------------------------------------------------------------------- */
+
+:root {
+  /* สี */
+  --bg: #1b1f2a;
+  --paper: #faf7f0;
+  --paper-soft: #f1ede2;
+  --ink: #22262f;
+  --ink-soft: #565043;
+  --muted: #8b8578;
+  --line: #ddd6c4;
+  --rule: #c1443b;
+  --accent-teal: #1f6f63;
+  --accent-teal-dark: #164f46;
+  --accent-amber: #c9922f;
+  --accent-green: #2f8b5e;
+  --danger: #b23b34;
+  --shadow: 0 18px 40px -22px rgba(20, 20, 15, 0.45);
+
+  /* ตัวอักษร */
+  --font-display: "Fraunces", "Sarabun", Georgia, serif;
+  --font-body: "Inter", "Sarabun", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Sarabun", monospace;
+
+  --radius: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg);
+  background-image: radial-gradient(circle at 15% 0%, #232a38 0%, var(--bg) 55%);
+  color: var(--ink);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.page {
+  position: relative;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 48px 32px 64px 56px;
+}
+
+/* เส้นริมกระดาษแบบสมุดโน้ต — องค์ประกอบสัญลักษณ์ของดีไซน์ */
+.margin-rule {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 28px;
+  width: 2px;
+  background: linear-gradient(
+    to bottom,
+    transparent 0%,
+    var(--rule) 6%,
+    var(--rule) 94%,
+    transparent 100%
+  );
+  opacity: 0.55;
+}
+
+@media (max-width: 720px) {
+  .margin-rule {
+    display: none;
+  }
+  .page {
+    padding: 32px 18px 48px;
+  }
+}
+
+/* ---------------------------- Header ---------------------------- */
+
+.page-header {
+  margin-bottom: 36px;
+}
+
+.header-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #9fb4ac;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: clamp(32px, 5vw, 48px);
+  color: #f6f3ea;
+  margin: 6px 0 8px;
+  letter-spacing: -0.01em;
+}
+
+.header-today {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  color: #b8bcc6;
+  margin: 0;
+}
+
+/* ---------------------------- Stats row ---------------------------- */
+
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+  margin-bottom: 28px;
+}
+
+.stat-card {
+  background: var(--paper);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-number {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.stat-label {
+  font-size: 12.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.stat-done .stat-number {
+  color: var(--accent-green);
+}
+
+.stat-pending .stat-number {
+  color: var(--accent-amber);
+}
+
+@media (max-width: 560px) {
+  .stats-row {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  .stat-card {
+    padding: 12px 10px;
+  }
+  .stat-number {
+    font-size: 22px;
+  }
+}
+
+/* ---------------------------- Cards (shared) ---------------------------- */
+
+.form-card,
+.list-card {
+  background: var(--paper);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 26px 28px 28px;
+  margin-bottom: 24px;
+}
+
+.form-card-head,
+.list-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+
+.form-card-head h2,
+.list-card-head h2 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 600;
+  margin: 0;
+  color: var(--ink);
+}
+
+.form-card-tag {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  background: var(--accent-teal);
+  color: #ecf5f2;
+  padding: 4px 10px;
+  border-radius: 999px;
+}
+
+.form-card-tag.editing {
+  background: var(--accent-amber);
+}
+
+/* ---------------------------- Form ---------------------------- */
+
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.field-wide {
+  grid-column: span 2;
+}
+
+.field label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.field input,
+.field select,
+.field textarea {
+  font-family: var(--font-body);
+  font-size: 14.5px;
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 9px;
+  background: #fffefb;
+  color: var(--ink);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.field input:focus,
+.field select:focus,
+.field textarea:focus {
+  outline: none;
+  border-color: var(--accent-teal);
+  box-shadow: 0 0 0 3px rgba(31, 111, 99, 0.15);
+}
+
+.field textarea {
+  resize: vertical;
+  min-height: 44px;
+}
+
+@media (max-width: 720px) {
+  .form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .field-wide {
+    grid-column: span 2;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+  .field-wide {
+    grid-column: span 1;
+  }
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* ---------------------------- Buttons ---------------------------- */
+
+.btn {
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 10px 20px;
+  border-radius: 9px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.15s ease, background 0.15s ease;
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn-primary {
+  background: var(--accent-teal);
+  color: #ecf5f2;
+}
+
+.btn-primary:hover {
+  background: var(--accent-teal-dark);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink-soft);
+  border: 1.5px solid var(--line);
+}
+
+.btn-ghost:hover {
+  background: var(--paper-soft);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--accent-teal);
+  border: 1.5px solid var(--accent-teal);
+}
+
+.btn-outline:hover {
+  background: rgba(31, 111, 99, 0.08);
+}
+
+.btn-small {
+  padding: 7px 14px;
+  font-size: 13px;
+}
+
+/* ---------------------------- Status banner ---------------------------- */
+
+.status-banner {
+  font-size: 13.5px;
+  padding: 10px 14px;
+  border-radius: 9px;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.status-banner.info {
+  background: #e7f0ee;
+  color: var(--accent-teal-dark);
+}
+
+.status-banner.error {
+  background: #f6e3e1;
+  color: var(--danger);
+}
+
+.status-banner.success {
+  background: #e6f2ea;
+  color: var(--accent-green);
+}
+
+/* ---------------------------- List controls ---------------------------- */
+
+.list-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.list-controls input[type="date"] {
+  font-family: var(--font-body);
+  padding: 7px 10px;
+  border: 1.5px solid var(--line);
+  border-radius: 9px;
+  background: #fffefb;
+  font-size: 13.5px;
+}
+
+/* ---------------------------- Table ---------------------------- */
+
+.table-wrap {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+}
+
+.routine-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 640px;
+}
+
+.routine-table thead th {
+  text-align: left;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  background: var(--paper-soft);
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.routine-table tbody td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--line);
+  font-size: 14px;
+  vertical-align: top;
+}
+
+.routine-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.routine-table tbody tr:hover {
+  background: #fbf5e8;
+}
+
+td[data-cell="date"],
+td[data-cell="time"] {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+td[data-cell="activity"] {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+td[data-cell="note"] {
+  color: var(--muted);
+  max-width: 220px;
+}
+
+.col-actions {
+  white-space: nowrap;
+  text-align: right;
+}
+
+/* stamp ป้ายสถานะ ("ทำแล้ว" / "ยังไม่ทำ") */
+.status-stamp {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 4px 10px;
+  border-radius: 999px;
+  transform: rotate(-2deg);
+  border: 1.5px solid currentColor;
+}
+
+.status-stamp.done {
+  color: var(--accent-green);
+  background: rgba(47, 139, 94, 0.1);
+}
+
+.status-stamp.pending {
+  color: var(--accent-amber);
+  background: rgba(201, 146, 47, 0.12);
+}
+
+.icon-btn {
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 600;
+  background: transparent;
+  border: 1.5px solid var(--line);
+  border-radius: 7px;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin-left: 6px;
+  color: var(--ink-soft);
+}
+
+.icon-btn.edit-btn:hover {
+  border-color: var(--accent-teal);
+  color: var(--accent-teal-dark);
+}
+
+.icon-btn.delete-btn:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.empty-state {
+  text-align: center;
+  color: var(--muted);
+  padding: 28px 10px 6px;
+  font-size: 14px;
+}
+
+/* ---------------------------- Footer ---------------------------- */
+
+.page-footer {
+  text-align: center;
+  font-size: 12.5px;
+  color: #7d8290;
+  margin-top: 12px;
+}
+
+/* ---------------------------- Mobile card layout for table ---------------------------- */
+
+@media (max-width: 680px) {
+  .routine-table thead {
+    display: none;
+  }
+
+  .routine-table,
+  .routine-table tbody,
+  .routine-table tr,
+  .routine-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table-wrap {
+    border: none;
+    overflow: visible;
+  }
+
+  .routine-table tbody tr {
+    background: #fffefb;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    margin-bottom: 12px;
+    padding: 6px 4px;
+  }
+
+  .routine-table tbody td {
+    border-bottom: none;
+    padding: 6px 14px;
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    text-align: right;
+  }
+
+  .routine-table tbody td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--muted);
+    text-align: left;
+    font-weight: 600;
+  }
+
+  td[data-cell="note"] {
+    max-width: none;
+  }
+
+  .col-actions {
+    justify-content: flex-end;
+  }
+}

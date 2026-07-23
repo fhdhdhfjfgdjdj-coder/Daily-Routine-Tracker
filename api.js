@@ -2,13 +2,7 @@
  * api.js
  * -----------------------------------------------------------------------
  * ชั้นเชื่อมต่อ (API layer) ระหว่าง Frontend กับ Google Apps Script Web App
- * ใช้ fetch() ทั้งหมด และคุยกันด้วย JSON
- *
- * หมายเหตุสำคัญเรื่อง CORS:
- * Google Apps Script Web App ไม่รองรับ preflight request (OPTIONS)
- * ดังนั้นฝั่ง POST เราจึงส่ง Content-Type เป็น "text/plain;charset=utf-8"
- * (ไม่ใช่ application/json) เพื่อให้ browser มองว่าเป็น "simple request"
- * และไม่ยิง preflight ออกไป ฝั่ง Code.gs จะ parse ตัวข้อความเป็น JSON เอง
+ * และส่งแจ้งเตือนเข้า Discord Webhook
  * -----------------------------------------------------------------------
  */
 
@@ -40,10 +34,25 @@ const Api = {
    * @param {{date:string, time:string, activity:string, status:string, note:string}} routine
    */
   async addRoutine(routine) {
-    return Api._post({
+    const result = await Api._post({
       action: "add",
       ...routine,
     });
+
+    // ส่งแจ้งเตือน Discord เมื่อเพิ่มรายการสำเร็จ
+    await Api.sendDiscordNotification({
+      title: "📌 บันทึกกิจวัตรใหม่สำเร็จ!",
+      color: 3066993, // สีเขียว
+      fields: [
+        { name: "📅 วันที่", value: routine.date || "-", inline: true },
+        { name: "⏰ เวลา", value: routine.time || "-", inline: true },
+        { name: "📝 กิจกรรม", value: routine.activity || "-", inline: false },
+        { name: "🏷️ สถานะ", value: routine.status || "-", inline: true },
+        { name: "💬 หมายเหตุ", value: routine.note || "-", inline: false },
+      ],
+    });
+
+    return result;
   },
 
   /**
@@ -51,10 +60,25 @@ const Api = {
    * @param {{id:string, date:string, time:string, activity:string, status:string, note:string}} routine
    */
   async updateRoutine(routine) {
-    return Api._post({
+    const result = await Api._post({
       action: "update",
       ...routine,
     });
+
+    // ส่งแจ้งเตือน Discord เมื่อแก้ไขรายการสำเร็จ
+    await Api.sendDiscordNotification({
+      title: "✏️ อัปเดตรายการกิจวัตร!",
+      color: 16753920, // สีส้ม
+      fields: [
+        { name: "📅 วันที่", value: routine.date || "-", inline: true },
+        { name: "⏰ เวลา", value: routine.time || "-", inline: true },
+        { name: "📝 กิจกรรม", value: routine.activity || "-", inline: false },
+        { name: "🏷️ สถานะ", value: routine.status || "-", inline: true },
+        { name: "💬 หมายเหตุ", value: routine.note || "-", inline: false },
+      ],
+    });
+
+    return result;
   },
 
   /**
@@ -62,10 +86,50 @@ const Api = {
    * @param {string} id
    */
   async deleteRoutine(id) {
-    return Api._post({
+    const result = await Api._post({
       action: "delete",
       id,
     });
+
+    // ส่งแจ้งเตือน Discord เมื่อลบรายการสำเร็จ
+    await Api.sendDiscordNotification({
+      title: "🗑️ ลบรายการกิจวัตรแล้ว",
+      color: 15158332, // สีแดง
+      fields: [{ name: "🆔 ID รายการ", value: String(id), inline: true }],
+    });
+
+    return result;
+  },
+
+  /**
+   * ฟังก์ชันส่งแจ้งเตือนเข้า Discord ผ่าน Webhook
+   * @param {{title:string, color:number, fields:Array}} embedData
+   */
+  async sendDiscordNotification(embedData) {
+    // ดึง URL จาก CONFIG ที่ประกาศไว้ใน config.js
+    const webhookUrl = CONFIG.DISCORD_WEBHOOK_URL;
+
+    if (!webhookUrl) return;
+
+    try {
+      await fetch(webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          embeds: [
+            {
+              ...embedData,
+              timestamp: new Date().toISOString(),
+            },
+          ],
+        }),
+      });
+      console.log("ส่งแจ้งเตือนเข้า Discord สำเร็จ");
+    } catch (error) {
+      console.error("เกิดข้อผิดพลาดในการส่ง Discord Notification:", error);
+    }
   },
 
   /**
@@ -94,25 +158,3 @@ const Api = {
     return json.data;
   },
 };
-const config = require('./config.js');
-
-// ฟังก์ชันสำหรับส่งข้อความเข้า Discord
-async function sendDiscordNotification(message) {
-  try {
-    await fetch(config.discordWebhookUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        content: message // ข้อความที่จะส่ง
-      }),
-    });
-    console.log('ส่งแจ้งเตือนเข้า Discord สำเร็จ');
-  } catch (error) {
-    console.error('เกิดข้อผิดพลาดในการส่งแจ้งเตือน:', error);
-  }
-}
-
-// ตัวอย่างการนำไปเรียกใช้ในโค้ดของคุณ
-sendDiscordNotification("🔔 มีการอัปเดตระบบ หรือมีกิจกรรมใหม่เกิดขึ้น!");

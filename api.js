@@ -1,8 +1,8 @@
 /**
  * api.js
  * -----------------------------------------------------------------------
- * ชั้นเชื่อมต่อ (API layer) ระหว่าง Frontend กับ Google Apps Script Web App
- * และส่งแจ้งเตือนเข้า Discord Webhook
+ * ชั้นเชื่อมต่อ (API layer) สำหรับจัดการข้อมูลระบบ Daily Routine
+ * และส่งการแจ้งเตือนไปยัง Discord Webhook และ LINE Messaging API
  * -----------------------------------------------------------------------
  */
 
@@ -39,7 +39,7 @@ const Api = {
       ...routine,
     });
 
-    // ส่งแจ้งเตือน Discord เมื่อเพิ่มรายการสำเร็จ
+    // 1. ส่งแจ้งเตือน Discord
     await Api.sendDiscordNotification({
       title: "📌 บันทึกกิจวัตรใหม่สำเร็จ!",
       color: 3066993, // สีเขียว
@@ -52,11 +52,15 @@ const Api = {
       ],
     });
 
+    // 2. ส่งแจ้งเตือน LINE
+    const lineMsg = `📌 บันทึกกิจวัตรใหม่!\n📅 วันที่: ${routine.date || '-'}\n⏰ เวลา: ${routine.time || '-'}\n📝 กิจกรรม: ${routine.activity || '-'}\n🏷️ สถานะ: ${routine.status || '-'}\n💬 หมายเหตุ: ${routine.note || '-'}`;
+    await Api.sendLineNotification(lineMsg);
+
     return result;
   },
 
   /**
-   * แก้ไขกิจวัตรที่มีอยู่ (ต้องมี id)
+   * แก้ไขกิจวัตรที่มีอยู่
    * @param {{id:string, date:string, time:string, activity:string, status:string, note:string}} routine
    */
   async updateRoutine(routine) {
@@ -65,7 +69,7 @@ const Api = {
       ...routine,
     });
 
-    // ส่งแจ้งเตือน Discord เมื่อแก้ไขรายการสำเร็จ
+    // 1. ส่งแจ้งเตือน Discord
     await Api.sendDiscordNotification({
       title: "✏️ อัปเดตรายการกิจวัตร!",
       color: 16753920, // สีส้ม
@@ -77,6 +81,10 @@ const Api = {
         { name: "💬 หมายเหตุ", value: routine.note || "-", inline: false },
       ],
     });
+
+    // 2. ส่งแจ้งเตือน LINE
+    const lineMsg = `✏️ อัปเดตรายการกิจวัตร!\n📅 วันที่: ${routine.date || '-'}\n⏰ เวลา: ${routine.time || '-'}\n📝 กิจกรรม: ${routine.activity || '-'}\n🏷️ สถานะ: ${routine.status || '-'}`;
+    await Api.sendLineNotification(lineMsg);
 
     return result;
   },
@@ -91,22 +99,55 @@ const Api = {
       id,
     });
 
-    // ส่งแจ้งเตือน Discord เมื่อลบรายการสำเร็จ
+    // 1. ส่งแจ้งเตือน Discord
     await Api.sendDiscordNotification({
       title: "🗑️ ลบรายการกิจวัตรแล้ว",
       color: 15158332, // สีแดง
       fields: [{ name: "🆔 ID รายการ", value: String(id), inline: true }],
     });
 
+    // 2. ส่งแจ้งเตือน LINE
+    await Api.sendLineNotification(`🗑️ ลบรายการกิจวัตร (ID: ${id}) เรียบร้อยแล้ว`);
+
     return result;
   },
 
   /**
-   * ฟังก์ชันส่งแจ้งเตือนเข้า Discord ผ่าน Webhook
-   * @param {{title:string, color:number, fields:Array}} embedData
+   * ฟังก์ชันส่งแจ้งเตือนเข้า LINE Messaging API
+   */
+  async sendLineNotification(messageText) {
+    const token = CONFIG.LINE_CHANNEL_ACCESS_TOKEN;
+    const userId = CONFIG.LINE_USER_ID;
+
+    if (!token || !userId) return;
+
+    try {
+      await fetch('https://corsproxy.io/?' + encodeURIComponent('https://api.line.me/v2/bot/message/push'), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          to: userId,
+          messages: [
+            {
+              type: 'text',
+              text: messageText
+            }
+          ]
+        })
+      });
+      console.log('ส่งแจ้งเตือนเข้า LINE สำเร็จ');
+    } catch (error) {
+      console.error('เกิดข้อผิดพลาดในการส่ง LINE Notification:', error);
+    }
+  },
+
+  /**
+   * ฟังก์ชันส่งแจ้งเตือนเข้า Discord Webhook
    */
   async sendDiscordNotification(embedData) {
-    // ดึง URL จาก CONFIG ที่ประกาศไว้ใน config.js
     const webhookUrl = CONFIG.DISCORD_WEBHOOK_URL;
 
     if (!webhookUrl) return;
@@ -134,7 +175,6 @@ const Api = {
 
   /**
    * ฟังก์ชันภายในสำหรับส่งคำขอ POST ไปยัง Apps Script
-   * @param {object} payload
    */
   async _post(payload) {
     const res = await fetch(CONFIG.API_URL, {

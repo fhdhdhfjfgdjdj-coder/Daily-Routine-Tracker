@@ -94,3 +94,25 @@ const Api = {
     return json.data;
   },
 };
+const config = require('./config.js');
+
+// ฟังก์ชันสำหรับส่งข้อความเข้า Discord
+async function sendDiscordNotification(message) {
+  try {
+    await fetch(config.discordWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: message // ข้อความที่จะส่ง
+      }),
+    });
+    console.log('ส่งแจ้งเตือนเข้า Discord สำเร็จ');
+  } catch (error) {
+    console.error('เกิดข้อผิดพลาดในการส่งแจ้งเตือน:', error);
+  }
+}
+
+// ตัวอย่างการนำไปเรียกใช้ในโค้ดของคุณ
+sendDiscordNotification("🔔 มีการอัปเดตระบบ หรือมีกิจกรรมใหม่เกิดขึ้น!");

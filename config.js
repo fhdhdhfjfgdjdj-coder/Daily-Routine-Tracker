@@ -1,24 +1,14 @@
 /**
  * config.js
  * -----------------------------------------------------------------------
- * ตั้งค่า URL ของ Google Apps Script Web App ที่นี่
- *
- * วิธีหา URL:
- * 1. เปิดโปรเจกต์ Google Apps Script ที่ผูกกับ Google Sheet ของคุณ
- * 2. กด Deploy > New deployment > เลือกประเภท "Web app"
- * 3. ตั้งค่า Execute as: Me, Who has access: Anyone
- * 4. หลัง Deploy จะได้ URL รูปแบบ
- *    https://script.google.com/macros/s/XXXXXXXXXXXXXXXXXXXXX/exec
- * 5. นำ URL ที่ได้มาแทนที่ค่าด้านล่างนี้
+ * ตั้งค่า URL สำหรับเชื่อมต่อกับ Google Apps Script และ Discord Webhook
  * -----------------------------------------------------------------------
  */
 
 const CONFIG = {
-  // แทนที่ด้วย Web App URL ของ Google Apps Script ที่ Deploy แล้ว
+  // Web App URL ของ Google Apps Script ที่ Deploy แล้ว
   API_URL: "https://script.google.com/macros/s/AKfycbw9pOux-Evvi5kRSR2AvlW5yHTZDMhnzykWRz_tHM9o6XNLe2BqGD1HjxTDzpsZ5A4X/exec",
-};
 
-module.exports = {
-  // ... ค่าเดิมในไฟล์ของคุณ
-  discordWebhookUrl: "https://discord.com/api/webhooks/1529757994059829279/Xhtm_3frwiNaweMzyzeKks2hggWKHH1JDPYiuJ7fOP0sEu3MF5ZjtM4y4NxvbkjlbP6B"
+  // Discord Webhook URL สำหรับส่งการแจ้งเตือน
+  DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1529757994059829279/Xhtm_3frwiNaweMzyzeKks2hggWKHH1JDPYiuJ7fOP0sEu3MF5ZjtM4y4NxvbkjlbP6B"
 };

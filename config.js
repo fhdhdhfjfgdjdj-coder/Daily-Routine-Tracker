@@ -17,3 +17,8 @@ const CONFIG = {
   // แทนที่ด้วย Web App URL ของ Google Apps Script ที่ Deploy แล้ว
   API_URL: "https://script.google.com/macros/s/AKfycbw9pOux-Evvi5kRSR2AvlW5yHTZDMhnzykWRz_tHM9o6XNLe2BqGD1HjxTDzpsZ5A4X/exec",
 };
+
+module.exports = {
+  // ... ค่าเดิมในไฟล์ของคุณ
+  discordWebhookUrl: "https://discord.com/api/webhooks/1529757994059829279/Xhtm_3frwiNaweMzyzeKks2hggWKHH1JDPYiuJ7fOP0sEu3MF5ZjtM4y4NxvbkjlbP6B"
+};

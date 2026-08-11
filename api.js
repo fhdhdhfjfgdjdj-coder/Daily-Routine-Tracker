@@ -42,7 +42,7 @@ const Api = {
     // 1. ส่งแจ้งเตือน Discord
     await Api.sendDiscordNotification({
       title: "📌 บันทึกกิจวัตรใหม่สำเร็จ!",
-      color: 3066993, // สีเขียว
+      color: 3447003, // สีฟ้า (Hex: #3498DB)
       fields: [
         { name: "📅 วันที่", value: routine.date || "-", inline: true },
         { name: "⏰ เวลา", value: routine.time || "-", inline: true },

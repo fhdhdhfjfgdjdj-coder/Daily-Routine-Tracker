@@ -69,10 +69,14 @@ const Api = {
       ...routine,
     });
 
+    // เช็กสถานะเพื่อเลือกสีแถบ (ทำแล้ว = สีเขียว, ยังไม่ทำ/อื่นๆ = สีส้ม)
+    const isDone = routine.status === "ทำแล้ว";
+    const embedColor = isDone ? 3066993 : 16753920; // 3066993 = สีเขียว, 16753920 = สีส้ม
+
     // 1. ส่งแจ้งเตือน Discord
     await Api.sendDiscordNotification({
       title: "✏️ อัปเดตรายการกิจวัตร!",
-      color: 16753920, // สีส้ม
+      color: embedColor, // ใช้สีตามเงื่อนไขสถานะ
       fields: [
         { name: "📅 วันที่", value: routine.date || "-", inline: true },
         { name: "⏰ เวลา", value: routine.time || "-", inline: true },

@@ -4,7 +4,7 @@
 
 const CONFIG = {
   // 1. ลิงก์ Web App จาก Google Apps Script (ที่สั่ง Deploy เป็น Web App)
-  API_URL: "https://script.google.com/macros/s/AKfycbx5RrP2RRVrAbdjW9MG9VRVCGr90CYQear5UcUf4V2R7yG5zaYlibzVc2EnjnLlDLp0dQ/exec",
+  API_URL: "https://script.google.com/macros/s/AKfycbxDgJyXBEegJfTWWToYYH-0hZyWCvkOGS9iuYAzxPtV9KEdGEqAYNmh1DGEHA23ouKRvQ/exec",
   
   // Discord Webhook URL
   DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1536659596763070526/EV0yxPShYa1YP4N6HsDdQbKdqlVf4rbBqJk3aAUIe9jAy2MlpyHdkVQmv4z0Y9gs49M3",

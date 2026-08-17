@@ -1,32 +1,22 @@
 /**
- * api.js
+ * api.js (Local Mock Version)
  * -----------------------------------------------------------------------
- * ชั้นเชื่อมต่อ (API layer) สำหรับจัดการข้อมูลระบบ Daily Routine
- * และส่งการแจ้งเตือนไปยัง Discord Webhook และ LINE Messaging API
+ * ระบบจำลองการจัดการข้อมูลชั่วคราว (ไม่ผ่าน Google Apps Script)
+ * แต่ยังคงส่งการแจ้งเตือนไปยัง Discord Webhook และ LINE Messaging API ตามปกติ
  * -----------------------------------------------------------------------
  */
 
+// สร้างหน่วยความจำจำลองข้อมูลชั่วคราวไว้ในเครื่อง
+let localRoutines = [];
+
 const Api = {
   /**
-   * ดึงรายการกิจวัตรทั้งหมดจาก Google Sheets
+   * ดึงรายการกิจวัตรทั้งหมด (จำลองข้อมูล)
    * @returns {Promise<Array>} รายการกิจวัตร
    */
   async getRoutines() {
-    const res = await fetch(`${CONFIG.API_URL}?action=list`, {
-      method: "GET",
-    });
-
-    if (!res.ok) {
-      throw new Error(`โหลดข้อมูลไม่สำเร็จ (HTTP ${res.status})`);
-    }
-
-    const json = await res.json();
-
-    if (!json.success) {
-      throw new Error(json.message || "โหลดข้อมูลไม่สำเร็จ");
-    }
-
-    return json.data || [];
+    // ส่งคืนข้อมูลจำลองในเครื่อง
+    return Promise.resolve(localRoutines);
   },
 
   /**
@@ -34,10 +24,11 @@ const Api = {
    * @param {{date:string, time:string, activity:string, status:string, note:string}} routine
    */
   async addRoutine(routine) {
-    const result = await Api._post({
-      action: "add",
+    const newRoutine = {
+      id: String(Date.now()), // สุ่ม ID จากเวลาปัจจุบัน
       ...routine,
-    });
+    };
+    localRoutines.push(newRoutine);
 
     // 1. ส่งแจ้งเตือน Discord
     await Api.sendDiscordNotification({
@@ -56,7 +47,7 @@ const Api = {
     const lineMsg = `📌 บันทึกกิจวัตรใหม่!\n📅 วันที่: ${routine.date || '-'}\n⏰ เวลา: ${routine.time || '-'}\n📝 กิจกรรม: ${routine.activity || '-'}\n🏷️ สถานะ: ${routine.status || '-'}\n💬 หมายเหตุ: ${routine.note || '-'}`;
     await Api.sendLineNotification(lineMsg);
 
-    return result;
+    return newRoutine;
   },
 
   /**
@@ -64,19 +55,19 @@ const Api = {
    * @param {{id:string, date:string, time:string, activity:string, status:string, note:string}} routine
    */
   async updateRoutine(routine) {
-    const result = await Api._post({
-      action: "update",
-      ...routine,
-    });
+    const index = localRoutines.findIndex((r) => r.id === routine.id);
+    if (index !== -1) {
+      localRoutines[index] = { ...localRoutines[index], ...routine };
+    }
 
-    // เช็กสถานะเพื่อเลือกสีแถบ (ทำแล้ว = สีเขียว, ยังไม่ทำ/อื่นๆ = สีส้ม)
+    // เช็กสถานะเพื่อเลือกสีแถบ
     const isDone = routine.status === "ทำแล้ว";
-    const embedColor = isDone ? 3066993 : 16753920; // 3066993 = สีเขียว, 16753920 = สีส้ม
+    const embedColor = isDone ? 3066993 : 16753920;
 
     // 1. ส่งแจ้งเตือน Discord
     await Api.sendDiscordNotification({
       title: "✏️ อัปเดตรายการกิจวัตร!",
-      color: embedColor, // ใช้สีตามเงื่อนไขสถานะ
+      color: embedColor,
       fields: [
         { name: "📅 วันที่", value: routine.date || "-", inline: true },
         { name: "⏰ เวลา", value: routine.time || "-", inline: true },
@@ -90,7 +81,7 @@ const Api = {
     const lineMsg = `✏️ อัปเดตรายการกิจวัตร!\n📅 วันที่: ${routine.date || '-'}\n⏰ เวลา: ${routine.time || '-'}\n📝 กิจกรรม: ${routine.activity || '-'}\n🏷️ สถานะ: ${routine.status || '-'}`;
     await Api.sendLineNotification(lineMsg);
 
-    return result;
+    return routine;
   },
 
   /**
@@ -98,10 +89,7 @@ const Api = {
    * @param {string} id
    */
   async deleteRoutine(id) {
-    const result = await Api._post({
-      action: "delete",
-      id,
-    });
+    localRoutines = localRoutines.filter((r) => r.id !== id);
 
     // 1. ส่งแจ้งเตือน Discord
     await Api.sendDiscordNotification({
@@ -113,7 +101,7 @@ const Api = {
     // 2. ส่งแจ้งเตือน LINE
     await Api.sendLineNotification(`🗑️ ลบรายการกิจวัตร (ID: ${id}) เรียบร้อยแล้ว`);
 
-    return result;
+    return true;
   },
 
   /**
@@ -175,30 +163,5 @@ const Api = {
     } catch (error) {
       console.error("เกิดข้อผิดพลาดในการส่ง Discord Notification:", error);
     }
-  },
-
-  /**
-   * ฟังก์ชันภายในสำหรับส่งคำขอ POST ไปยัง Apps Script
-   */
-  async _post(payload) {
-    const res = await fetch(CONFIG.API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "text/plain;charset=utf-8",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      throw new Error(`ส่งข้อมูลไม่สำเร็จ (HTTP ${res.status})`);
-    }
-
-    const json = await res.json();
-
-    if (!json.success) {
-      throw new Error(json.message || "ส่งข้อมูลไม่สำเร็จ");
-    }
-
-    return json.data;
-  },
+  }
 };

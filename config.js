@@ -1,6 +1,6 @@
 const CONFIG = {
   // วาง URL ที่ก๊อปปี้มาลงในนี้ (ต้องลงท้ายด้วย /exec)
-  API_URL: "https://script.google.com/macros/s/AKfycbwA8GaoSOdZIGcCU7TH_KIfcZ9Jx64PFx-oiYr8YtWT/dev", 
+  API_URL: "https://script.google.com/macros/s/AKfycbxMc_DZp2vDwYcq1ksPlZt4ogttd9Ks_ZsU7immHJ894R1Td321D-kkSE_wFccTcdbUzg/exec", 
   
   // Discord Webhook URL
   DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1536659596763070526/EV0yxPShYa1YP4N6HsDdQbKdqlVf4rbBqJk3aAUIe9jAy2MlpyHdkVQmv4z0Y9gs49M3",

@@ -2,7 +2,11 @@
  * api.js
  * -----------------------------------------------------------------------
  * ชั้นเชื่อมต่อ (API layer) สำหรับจัดการข้อมูลระบบ Daily Routine
- * และส่งการแจ้งเตือนไปยัง Discord Webhook และ LINE Messaging API
+ * ผ่าน Google Apps Script Web App ที่เชื่อมกับ Google Sheets
+ *
+ * หมายเหตุ: การแจ้งเตือน Discord/LINE ย้ายไปทำงานฝั่งเซิร์ฟเวอร์ใน Code.gs
+ * แล้ว (ทำงานอัตโนมัติหลังบันทึกลงชีตสำเร็จทุกครั้ง) เพื่อไม่ต้องฝัง
+ * Webhook URL / Token ไว้ในโค้ดฝั่งเบราว์เซอร์ซึ่งใครก็ดูได้จาก View Source
  * -----------------------------------------------------------------------
  */
 
@@ -30,155 +34,43 @@ const Api = {
   },
 
   /**
-   * เพิ่มกิจวัตรใหม่
+   * เพิ่มกิจวัตรใหม่ (Code.gs จะส่งแจ้งเตือน Discord/LINE ให้อัตโนมัติ)
    * @param {{date:string, time:string, activity:string, status:string, note:string}} routine
    */
   async addRoutine(routine) {
-    const result = await Api._post({
+    return Api._post({
       action: "add",
       ...routine,
     });
-
-    // 1. ส่งแจ้งเตือน Discord
-    await Api.sendDiscordNotification({
-      title: "📌 บันทึกกิจวัตรใหม่สำเร็จ!",
-      color: 3447003, // สีฟ้า (Hex: #3498DB)
-      fields: [
-        { name: "📅 วันที่", value: routine.date || "-", inline: true },
-        { name: "⏰ เวลา", value: routine.time || "-", inline: true },
-        { name: "📝 กิจกรรม", value: routine.activity || "-", inline: false },
-        { name: "🏷️ สถานะ", value: routine.status || "-", inline: true },
-        { name: "💬 หมายเหตุ", value: routine.note || "-", inline: false },
-      ],
-    });
-
-    // 2. ส่งแจ้งเตือน LINE
-    const lineMsg = `📌 บันทึกกิจวัตรใหม่!\n📅 วันที่: ${routine.date || '-'}\n⏰ เวลา: ${routine.time || '-'}\n📝 กิจกรรม: ${routine.activity || '-'}\n🏷️ สถานะ: ${routine.status || '-'}\n💬 หมายเหตุ: ${routine.note || '-'}`;
-    await Api.sendLineNotification(lineMsg);
-
-    return result;
   },
 
   /**
-   * แก้ไขกิจวัตรที่มีอยู่
+   * แก้ไขกิจวัตรที่มีอยู่ (Code.gs จะส่งแจ้งเตือน Discord/LINE ให้อัตโนมัติ)
    * @param {{id:string, date:string, time:string, activity:string, status:string, note:string}} routine
    */
   async updateRoutine(routine) {
-    const result = await Api._post({
+    return Api._post({
       action: "update",
       ...routine,
     });
-
-    // เช็กสถานะเพื่อเลือกสีแถบ (ทำแล้ว = สีเขียว, ยังไม่ทำ/อื่นๆ = สีส้ม)
-    const isDone = routine.status === "ทำแล้ว";
-    const embedColor = isDone ? 3066993 : 16753920; // 3066993 = สีเขียว, 16753920 = สีส้ม
-
-    // 1. ส่งแจ้งเตือน Discord
-    await Api.sendDiscordNotification({
-      title: "✏️ อัปเดตรายการกิจวัตร!",
-      color: embedColor, // ใช้สีตามเงื่อนไขสถานะ
-      fields: [
-        { name: "📅 วันที่", value: routine.date || "-", inline: true },
-        { name: "⏰ เวลา", value: routine.time || "-", inline: true },
-        { name: "📝 กิจกรรม", value: routine.activity || "-", inline: false },
-        { name: "🏷️ สถานะ", value: routine.status || "-", inline: true },
-        { name: "💬 หมายเหตุ", value: routine.note || "-", inline: false },
-      ],
-    });
-
-    // 2. ส่งแจ้งเตือน LINE
-    const lineMsg = `✏️ อัปเดตรายการกิจวัตร!\n📅 วันที่: ${routine.date || '-'}\n⏰ เวลา: ${routine.time || '-'}\n📝 กิจกรรม: ${routine.activity || '-'}\n🏷️ สถานะ: ${routine.status || '-'}`;
-    await Api.sendLineNotification(lineMsg);
-
-    return result;
   },
 
   /**
-   * ลบกิจวัตรตาม id
+   * ลบกิจวัตรตาม id (Code.gs จะส่งแจ้งเตือน Discord/LINE ให้อัตโนมัติ)
    * @param {string} id
    */
   async deleteRoutine(id) {
-    const result = await Api._post({
+    return Api._post({
       action: "delete",
       id,
     });
-
-    // 1. ส่งแจ้งเตือน Discord
-    await Api.sendDiscordNotification({
-      title: "🗑️ ลบรายการกิจวัตรแล้ว",
-      color: 15158332, // สีแดง
-      fields: [{ name: "🆔 ID รายการ", value: String(id), inline: true }],
-    });
-
-    // 2. ส่งแจ้งเตือน LINE
-    await Api.sendLineNotification(`🗑️ ลบรายการกิจวัตร (ID: ${id}) เรียบร้อยแล้ว`);
-
-    return result;
-  },
-
-  /**
-   * ฟังก์ชันส่งแจ้งเตือนเข้า LINE Messaging API
-   */
-  async sendLineNotification(messageText) {
-    const token = CONFIG.LINE_CHANNEL_ACCESS_TOKEN;
-    const userId = CONFIG.LINE_USER_ID;
-
-    if (!token || !userId) return;
-
-    try {
-      await fetch('https://corsproxy.io/?' + encodeURIComponent('https://api.line.me/v2/bot/message/push'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          to: userId,
-          messages: [
-            {
-              type: 'text',
-              text: messageText
-            }
-          ]
-        })
-      });
-      console.log('ส่งแจ้งเตือนเข้า LINE สำเร็จ');
-    } catch (error) {
-      console.error('เกิดข้อผิดพลาดในการส่ง LINE Notification:', error);
-    }
-  },
-
-  /**
-   * ฟังก์ชันส่งแจ้งเตือนเข้า Discord Webhook
-   */
-  async sendDiscordNotification(embedData) {
-    const webhookUrl = CONFIG.DISCORD_WEBHOOK_URL;
-
-    if (!webhookUrl) return;
-
-    try {
-      await fetch(webhookUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          embeds: [
-            {
-              ...embedData,
-              timestamp: new Date().toISOString(),
-            },
-          ],
-        }),
-      });
-      console.log("ส่งแจ้งเตือนเข้า Discord สำเร็จ");
-    } catch (error) {
-      console.error("เกิดข้อผิดพลาดในการส่ง Discord Notification:", error);
-    }
   },
 
   /**
    * ฟังก์ชันภายในสำหรับส่งคำขอ POST ไปยัง Apps Script
+   * ใช้ Content-Type: text/plain โดยตั้งใจ เพื่อเลี่ยง CORS preflight (OPTIONS)
+   * ที่ Apps Script Web App ไม่รองรับ — ฝั่ง Code.gs จะ JSON.parse ตัว body
+   * ให้เองอยู่แล้วไม่ว่า header จะระบุ content-type อะไร
    */
   async _post(payload) {
     const res = await fetch(CONFIG.API_URL, {

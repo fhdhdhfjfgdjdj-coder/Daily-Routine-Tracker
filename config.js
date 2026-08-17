@@ -1,10 +1,10 @@
-
+/**
+ * config.js
+ */
 
 const CONFIG = {
-  // วาง URL ของเว็บแอปที่ได้จาก Google Apps Script หลัง Deploy > New deployment
-  API_URL: "",
   
-    // Discord Webhook URL
+  // Discord Webhook URL
   DISCORD_WEBHOOK_URL: "https://discord.com/api/webhooks/1536659596763070526/EV0yxPShYa1YP4N6HsDdQbKdqlVf4rbBqJk3aAUIe9jAy2MlpyHdkVQmv4z0Y9gs49M3",
 
   // วาง Channel Access Token ที่ก๊อปปี้มาจากแท็บ Messaging API
